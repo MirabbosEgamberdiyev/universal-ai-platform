@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # PostgreSQL 16 with Row-Level Security
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: omniagent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: omniagent_db
+      POSTGRES_USER: omniagent_app
+      POSTGRES_PASSWORD: StrongDatabasePassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omniagent_app -d omniagent_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - omniagent-network
+
+  # ----------------------------------------------------------------------------
+  # Redis 7 (Tokens, Rate Limiting, Ephemeral Caching)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: omniagent-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - omniagent-network
+
+  # ----------------------------------------------------------------------------
+  # RabbitMQ 3.13 with Management Dashboard
+  # ----------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: omniagent-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: omniagent
+      RABBITMQ_DEFAULT_PASS: OmniAgentRabbitMQPassword!
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"     # AMQP protocol
+      - "15672:15672"   # Management Web UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - omniagent-network
+
+  # ----------------------------------------------------------------------------
+  # MinIO (S3-Compatible Object Storage for Media Assets)
+  # ----------------------------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2024-05-10T01-41-38Z
+    container_name: omniagent-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123!
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+    networks:
+      - omniagent-network
+
+  # ----------------------------------------------------------------------------
+  # OmniAgent Backend (Spring Boot 3.3.4 / Java 21)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: omniagent-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omniagent_db
+      SPRING_DATASOURCE_USERNAME: omniagent_app
+      SPRING_DATASOURCE_PASSWORD: StrongDatabasePassword123!
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: omniagent
+      SPRING_RABBITMQ_PASSWORD: OmniAgentRabbitMQPassword!
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      OMNIAGENT_KMS_MASTER_KEY: OmniAgentKmsKey2026SecureVault!
+      OMNIAGENT_KMS_ACTIVE_KEY_ID: kms-v1
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: minioadmin
+      STORAGE_SECRET_KEY: minioadmin123!
+      STORAGE_BUCKET_NAME: omniagent-media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - omniagent-network
+
+  # ----------------------------------------------------------------------------
+  # OmniAgent Frontend (Next.js 14 App Router)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: omniagent-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+      NEXT_PUBLIC_APP_NAME: OmniAgent
+    depends_on:
+      - backend
+    networks:
+      - omniagent-network
+
+networks:
+  omniagent-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  minio_data:
+    driver: local

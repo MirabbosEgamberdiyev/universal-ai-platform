@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:omniagent_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+omniagent:
+  security:
+    jwt:
+      secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      access-token-expiration-ms: 60000
+      refresh-token-expiration-ms: 300000
+  vault:
+    master-key: 7vF8kL3zQp1mN4bW9xR2tY5uI8oP0sA3dF6gH9jK1lE=
+  ai:
+    primary-provider: GEMINI
+    gemini:
+      api-key: test-gemini-key
+      model: gemini-1.5-flash
+    openai:
+      api-key: test-openai-key
+      model: gpt-4o-mini

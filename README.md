@@ -73,28 +73,28 @@ OmniAgent is engineered as a **Modular Monolith** following **Hexagonal Architec
 
 ## 🚀 Quick Start with Docker Compose
 
-The easiest way to run the full production environment (Database, Redis, RabbitMQ, MinIO, Backend, and Frontend) is via Docker Compose:
+The easiest way to run the full production environment (Database, Redis, RabbitMQ, Backend, and Frontend) is via Docker Compose or the provided one-click scripts:
 
+### Windows One-Click:
+- Double click **`docker-start.bat`** to start all services in Docker.
+- Double click **`docker-stop.bat`** to stop all services.
+- Double click **`docker-logs.bat`** to view real-time logs.
+
+### Command Line:
 ```bash
-# 1. Clone repository & navigate to platform directory
-cd universal-ai-platform
-
-# 2. Copy and customize environment variables
-cp .env.example .env
-
-# 3. Spin up all services
+# 1. Spin up all services in Docker
 docker compose up -d
 
-# 4. View logs
+# 2. View logs
 docker compose logs -f
 ```
 
 Services will be accessible at:
-- **Frontend Web UI:** `http://localhost:3000`
-- **Backend REST API:** `http://localhost:8080/api/v1`
-- **Swagger OpenAPI Docs:** `http://localhost:8080/swagger-ui/index.html`
-- **RabbitMQ Management:** `http://localhost:15672` (User: `omniagent`, Pass: `OmniAgentRabbitMQPassword!`)
-- **MinIO Storage Console:** `http://localhost:9001` (User: `minioadmin`, Pass: `minioadmin123!`)
+- **Frontend Web UI:** `http://localhost:3005`
+- **Backend REST API:** `http://localhost:8090/api/v1`
+- **Swagger OpenAPI Docs:** `http://localhost:8090/swagger-ui/index.html`
+- **RabbitMQ Management:** `http://localhost:15674` (User: `platform_mq`, Pass: `RabbitSecurePass123!`)
+- **Default Admin Account:** Username: `Admin` (or `admin@novasphere.ai`) / Password: `Admin.123$`
 
 ---
 

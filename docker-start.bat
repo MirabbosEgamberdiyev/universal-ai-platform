@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================================================
-echo [NovaSphere AI] Docker orqali platformani ishga tushirish...
+echo [Universal AI Platform] Docker orqali platformani ishga tushirish...
 echo ==============================================================================
 cd /d "%~dp0"
 

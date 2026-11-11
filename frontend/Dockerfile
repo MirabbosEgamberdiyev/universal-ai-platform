@@ -20,6 +20,15 @@ COPY . .
 # Next.js telemetry disable
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build arguments for client-side environment variables
+ARG NEXT_PUBLIC_API_URL=http://localhost:8090/api/v1
+ARG NEXT_PUBLIC_APP_NAME="NovaSphere AI"
+ARG NEXT_PUBLIC_DEFAULT_LANGUAGE=uz-Latn
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_DEFAULT_LANGUAGE=$NEXT_PUBLIC_DEFAULT_LANGUAGE
+
 RUN npm run build
 
 # Stage 3: Production runner
